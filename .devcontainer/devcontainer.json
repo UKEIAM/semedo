@@ -1,0 +1,45 @@
+// Use this file with a recent version of VS Code.
+{
+	"name": "Python 3",
+	"build": {
+		"dockerfile": "../Dockerfile",
+		"context": "..",
+		"args": {
+			// Select your PyTorch version from https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes
+			"PYTORCH_VERSION": "23.10-py3",
+			"INSTALL_VSCODE": "1"
+		}
+	},
+	// Some config for Git
+	"remoteEnv": {
+		"GIT_NAME": "Christopher Gundler",
+		"GIT_EMAIL": "c.gundler@uke.de"
+	},
+	"postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && git config --global user.email \"${GIT_EMAIL}\" && git config --global user.name \"${GIT_NAME}\"",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"editor.defaultFormatter": "charliermarsh.ruff",
+				"editor.formatOnSave": true,
+				"python.defaultInterpreterPath": "/usr/bin/python"
+			},
+			"extensions": [
+				"ms-python.python",
+				"visualstudioexptteam.vscodeintellicode",
+				"ms-toolsai.jupyter",
+				"kevinrose.vsc-python-indent",
+				"charliermarsh.ruff"
+			]
+		}
+	},
+	// We must instruct Docker to use the GPUs
+	"runArgs": [
+		"--gpus",
+		"all",
+		"--ipc=host"
+	],
+	// Use the following to include extern files from the Nextcloud
+	"mounts": [
+		// "source=/nextcloud/data,target=/data,type=bind,consistency=cached"
+	]
+}
