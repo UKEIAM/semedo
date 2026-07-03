@@ -1,0 +1,7 @@
+{
+  "image_folders": ["../../data/uke/train", "../../data/uke/val", "../../data/uke/test"],
+  "output_csv": "../../data/uke/train_uke_model_coordinates.csv",
+  "min_points": 4,
+  "max_points": 50,
+  "image_extensions": [".png", ".jpg", ".jpeg"]
+}
