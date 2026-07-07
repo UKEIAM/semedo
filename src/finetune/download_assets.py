@@ -21,11 +21,27 @@ DEFAULT_U2NET_URL = (
 )
 
 
+def is_valid_checkpoint(model_path: Path) -> bool:
+    """Check that model_path loads as a non-empty state dict (catches truncated downloads)."""
+    if not model_path.is_file():
+        return False
+    import torch
+
+    try:
+        checkpoint = torch.load(model_path, map_location="cpu")
+    except Exception:
+        return False
+    return isinstance(checkpoint, dict) and len(checkpoint) > 0
+
+
 def download_u2net_weights(model_path: Path, url: str, force: bool = False) -> None:
     """Download the pretrained U2NET checkpoint to model_path if it is not already there."""
-    if model_path.is_file() and not force:
-        print(f"u2net.pth already present at {model_path}, skipping (use --force to redownload).")
-        return
+    if not force:
+        if model_path.is_file() and is_valid_checkpoint(model_path):
+            print(f"u2net.pth already present at {model_path}, skipping (use --force to redownload).")
+            return
+        if model_path.is_file():
+            print(f"Existing file at {model_path} failed to load (likely a truncated download); redownloading.")
 
     model_path.parent.mkdir(parents=True, exist_ok=True)
     print(f"Downloading u2net.pth from {url}")

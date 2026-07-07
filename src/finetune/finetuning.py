@@ -172,6 +172,16 @@ def evaluate_loader(net, loader, device):
     return metrics
 
 
+def append_manifest_row(row, manifest_path):
+    """Append one training-run row to the checkpoint manifest CSV, creating it if needed."""
+    df_row = pd.DataFrame([row])
+    manifest_file = Path(manifest_path)
+    if not manifest_file.exists():
+        df_row.to_csv(manifest_file, index=False)
+    else:
+        df_row.to_csv(manifest_file, mode="a", header=False, index=False)
+
+
 def build_checkpoint_path(checkpoint_dir: str, run_name: str, extension: str = ".pth"):
     """Build a checkpoint path that respects filesystem filename length limits."""
     raw_filename = f"{run_name}{extension}"
@@ -387,6 +397,77 @@ def build_patient_group_folds(image_paths, n_folds, seed):
     return folds
 
 
+def is_path_under_dir(path, directory):
+    """Check whether an absolute path is located under directory (also resolved to absolute)."""
+    try:
+        common = os.path.commonpath([os.path.abspath(path), os.path.abspath(directory)])
+    except ValueError:
+        return False
+    return common == os.path.abspath(directory)
+
+
+def build_uke_pool_and_test_holdout(training_config):
+    """Load UKE metadata and split it into a k-fold pool (train+val dirs) and a held-out
+    test set (uke_test_dir) that no fold model ever trains or validates on.
+    """
+    uke_metadata_path = training_config.get(
+        "uke_metadata_path",
+        "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/train_uke_model_coordinates.csv",
+    )
+    uke_train_dir = training_config.get(
+        "uke_train_dir",
+        "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/train",
+    )
+    uke_val_dir = training_config.get(
+        "uke_val_dir", "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/val"
+    )
+    uke_test_dir = training_config.get(
+        "uke_test_dir",
+        "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/test",
+    )
+    uke_data_dirs = [uke_train_dir, uke_val_dir, uke_test_dir]
+
+    df_uke_raw = pd.read_csv(uke_metadata_path)
+    uke_available_paths = collect_images_from_folders(uke_data_dirs)
+    df_uke = normalize_uke_metadata_paths(
+        df_uke_raw,
+        candidate_roots=uke_data_dirs,
+        available_paths=uke_available_paths,
+    )
+
+    uke_paths_from_csv = sorted(
+        {
+            os.path.abspath(path)
+            for path in df_uke["image_path"].tolist()
+            if isinstance(path, str)
+        }
+    )
+    if len(uke_paths_from_csv) == 0:
+        raise ValueError("No usable UKE image paths found after metadata normalization.")
+
+    test_paths = sorted(
+        path for path in uke_paths_from_csv if is_path_under_dir(path, uke_test_dir)
+    )
+    test_paths_set = set(test_paths)
+    pool_paths = sorted(path for path in uke_paths_from_csv if path not in test_paths_set)
+
+    df_test_filtered = filter_df_to_selected_paths(df_uke, "/", test_paths)
+    _, _, polygon_test = get_gt_to_images(df_test_filtered, "/", [], [], test_paths)
+    test_paths_with_gt = sorted(path for path in test_paths if path in polygon_test)
+
+    print(
+        "UKE holdout reserved from k-fold pool: "
+        f"pool={len(pool_paths)} test={len(test_paths)} test_with_gt={len(test_paths_with_gt)}"
+    )
+
+    return {
+        "df_uke": df_uke,
+        "pool_paths": pool_paths,
+        "test_paths": test_paths_with_gt,
+        "polygon_test": polygon_test,
+    }
+
+
 def sample_paths_exact(paths, n_samples):
     """Sample exactly n_samples unique items from paths."""
     if n_samples is None:
@@ -567,7 +648,7 @@ def main():
 
     wandb_project = training_config.get("wandb_project", "uke_u2net_cv")
     wandb_entity = training_config.get("wandb_entity")
-    wandb_mode = training_config.get("wandb_mode", "online")
+    wandb_mode = training_config.get("wandb_mode", "disabled")
 
     ratio_scenarios = training_config.get(
         "ratio_scenarios",
@@ -663,23 +744,6 @@ def main():
     if not active_ratio_scenarios:
         raise ValueError("No active ratio scenario configured.")
 
-    uke_metadata_path = training_config.get(
-        "uke_metadata_path",
-        "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/train_uke_model_coordinates.csv",
-    )
-    uke_train_dir = training_config.get(
-        "uke_train_dir",
-        "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/train",
-    )
-    uke_val_dir = training_config.get(
-        "uke_val_dir", "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/val"
-    )
-    uke_test_dir = training_config.get(
-        "uke_test_dir",
-        "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/test",
-    )
-    uke_data_dirs = [uke_train_dir, uke_val_dir, uke_test_dir]
-
     use_patient_group_kfold_for_uke = bool(
         training_config.get("use_patient_group_kfold_for_uke", True)
     )
@@ -695,6 +759,7 @@ def main():
         "/workspaces/de.uke.iam.soos-document-ai-lab/train_uke_model/uke_models",
     )
     os.makedirs(checkpoint_dir, exist_ok=True)
+    manifest_path = os.path.join(checkpoint_dir, "training_runs_manifest.csv")
 
     backgrounds = training_config.get(
         "backgrounds",
@@ -729,27 +794,12 @@ def main():
         }
     ]
     df_uke = None
+    uke_test_paths_all = []
     if include_uke_in_training:
-        df_uke_raw = pd.read_csv(uke_metadata_path)
-        uke_available_paths = collect_images_from_folders(uke_data_dirs)
-        df_uke = normalize_uke_metadata_paths(
-            df_uke_raw,
-            candidate_roots=uke_data_dirs,
-            available_paths=uke_available_paths,
-        )
-
-        uke_paths_from_csv = sorted(
-            {
-                os.path.abspath(path)
-                for path in df_uke["image_path"].tolist()
-                if isinstance(path, str)
-            }
-        )
-
-        if len(uke_paths_from_csv) == 0:
-            raise ValueError(
-                "No usable UKE image paths found after metadata normalization."
-            )
+        uke_holdout = build_uke_pool_and_test_holdout(training_config)
+        df_uke = uke_holdout["df_uke"]
+        uke_paths_from_csv = uke_holdout["pool_paths"]
+        uke_test_paths_all = uke_holdout["test_paths"]
 
         if use_patient_group_kfold_for_uke:
             uke_folds = build_patient_group_folds(
@@ -855,7 +905,8 @@ def main():
         print(
             f"\n===== UKE SPLIT {fold_tag} | "
             f"train_imgs={len(uke_train_paths_all)} val_imgs={len(uke_val_paths_all)} "
-            f"train_groups={fold_ctx['n_train_groups']} val_groups={fold_ctx['n_val_groups']} =====\n"
+            f"train_groups={fold_ctx['n_train_groups']} val_groups={fold_ctx['n_val_groups']} "
+            f"held_out_test_imgs={len(uke_test_paths_all)} =====\n"
         )
 
         for ratio_cfg in active_ratio_scenarios:
@@ -1180,6 +1231,7 @@ def main():
                         "uke_n_folds": n_folds,
                         "uke_train_groups": fold_ctx["n_train_groups"],
                         "uke_val_groups": fold_ctx["n_val_groups"],
+                        "uke_test_held_out": len(uke_test_paths_all),
                     },
                 )
 
@@ -1311,6 +1363,29 @@ def main():
                             break
 
                 wandb.finish()
+
+                manifest_row = {
+                    "base_run_name": base_run_name,
+                    "run_name": run_name,
+                    "scenario_name": scenario_name,
+                    "fold_idx": fold_idx,
+                    "fold_tag": fold_tag,
+                    "n_folds": n_folds,
+                    "lr": lr,
+                    "aug_per_img": aug_per_img,
+                    "seed": run_seed,
+                    "train_domain_tag": train_domain_tag,
+                    "val_domain_tag": val_domain_tag,
+                    "checkpoint_path": checkpoint_path,
+                    "uke_test_held_out": len(uke_test_paths_all),
+                }
+                manifest_row.update(
+                    {f"best_val_{key}": value for key, value in best_val_metrics.items()}
+                )
+                try:
+                    append_manifest_row(manifest_row, manifest_path)
+                except Exception as e:
+                    print("Failed to append checkpoint manifest row:", e)
 
     print("\n===== TRAINING RUNS DONE =====")
 
