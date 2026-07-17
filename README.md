@@ -1,4 +1,4 @@
-# <img src="assets/logo.png" alt="SeMeDo" width="40" valign="middle"/> SeMeDo
+# <img src="assets/logo.png" alt="SeMeDo" width="70" valign="middle"/> SeMeDo
 
 SeMeDo provides deep-learning-based segmentation of patient-generated medical document photographs, separating the document region from background clutter, shadows, and perspective distortion in smartphone-captured images. It combines a lightweight annotation tool for creating custom ground-truth masks with a ready-to-use fine-tuning pipeline, so you can adapt the included U²-Net model to your own institution's documents with as few as ~100 annotated images. Use it as a preprocessing step before OCR or document understanding pipelines, whenever your input images come from uncontrolled, real-world photo capture rather than clean scans.
 
