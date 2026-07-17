@@ -1,6 +1,7 @@
 # ----------------------------------------------------------------------
-# Fromrom U2Net (https://github.com/LeCongThuong/U2Net)
-# Original license: 
+# Adapted from U2Net (https://github.com/LeCongThuong/U2Net),
+# based on the original U-2-Net (https://github.com/xuebinqin/U-2-Net).
+# Original license: Apache License 2.0 (see THIRD_PARTY_NOTICES.md)
 # ----------------------------------------------------------------------
 
 import torch

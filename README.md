@@ -1,5 +1,11 @@
-# Project template: GPU
-This repository represents a blueprint for Python projects using pyTorch optimized with NVIDIA GPUs. The image pre-install the following software components:
+# <img src="assets/logo.png" alt="SeMeDo" width="40" valign="middle"/> SeMeDo
+
+SeMeDo provides deep-learning-based segmentation of patient-generated medical document photographs, separating the document region from background clutter, shadows, and perspective distortion in smartphone-captured images. It combines a lightweight annotation tool for creating custom ground-truth masks with a ready-to-use fine-tuning pipeline, so you can adapt the included U²-Net model to your own institution's documents with as few as ~100 annotated images. Use it as a preprocessing step before OCR or document understanding pipelines, whenever your input images come from uncontrolled, real-world photo capture rather than clean scans.
+
+## Environment
+
+This repository is built on a GPU-optimized Python/PyTorch blueprint. The
+Docker image pre-installs:
 
 - Python 3.10
 - Anaconda with a default environment
@@ -17,7 +23,6 @@ This repository represents a blueprint for Python projects using pyTorch optimiz
     - TensorRT
     - Torch-TensorRT
 
-## Usage
 Specify the packages you require in the *requirements.txt*. More complex environment customization goes into *Dockerfile*.
 
 While using Visual Studio Code for development is encouraged, the image does not depend on this IDE in any way. As a side effect, its required server components are not even installed by default if the Dockerfile in root is built manually. Opening the project in VS Code will set the proper default and configure everything appropriately. Alternatively, build the container with `docker build -t <YOUR PROJECT NAME>:0.1 .` and run the container with `docker run -p <YOUR LOCAL PORT>:22 --rm --gpus all <YOUR PROJECT NAME>:0.1`.
@@ -82,3 +87,31 @@ patient-group fold ever trains or validates on, and after each fold run it appen
    ```
    This reads `test_ensemble_per_image.csv` and writes `violin_selection_score.png`/`.pdf`
    next to it. Pass `--per-image-csv`/`--output-dir` to point at a different location.
+
+## Acknowledgments
+
+This project adapts the U2-Net architecture and pretrained weights from
+[xuebinqin/U-2-Net](https://github.com/xuebinqin/U-2-Net) (via the
+[LeCongThuong/U2Net](https://github.com/LeCongThuong/U2Net) fork), licensed
+under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+(see the header of [src/finetune/u2net.py](src/finetune/u2net.py) for the
+adaptation notice; the pretrained weights are downloaded at setup time and
+not stored in this repository).
+
+For evaluation, it uses the SmartDoc15-CH1 dataset
+([jchazalon/smartdoc15-ch1-dataset](https://github.com/jchazalon/smartdoc15-ch1-dataset),
+licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+downloaded at setup time and not stored in this repository):
+
+> J.-C. Burie et al., "ICDAR2015 Competition on Smartphone Document Capture
+> and OCR (SmartDoc)", 13th International Conference on Document Analysis and
+> Recognition (ICDAR), 2015.
+
+Python dependencies (numpy, opencv-python/opencv-contrib-python, torch/torchvision,
+wandb) are installed separately via `pip`/the Docker base image under their
+own licenses (BSD-3-Clause, Apache-2.0, BSD-3-Clause, MIT respectively) and
+are not redistributed as part of this repository.
+
+## License
+
+This project's own code is licensed under the terms in [LICENSE](LICENSE).
