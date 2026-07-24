@@ -2,6 +2,40 @@
 
 SeMeDo provides deep-learning-based segmentation of patient-generated medical document photographs, separating the document region from background clutter, shadows, and perspective distortion in smartphone-captured images. It combines a lightweight annotation tool for creating custom ground-truth masks with a ready-to-use fine-tuning pipeline, so you can adapt the included U²-Net model to your own institution's documents with as few as ~100 annotated images. Use it as a preprocessing step before OCR or document understanding pipelines, whenever your input images come from uncontrolled, real-world photo capture rather than clean scans.
 
+## Getting started
+
+SeMeDo supports Python 3.10. The easiest local setup uses Conda; Docker is
+available as an isolated alternative. Run all commands from the repository
+root.
+
+### Option 1: Conda
+
+Create and activate a dedicated environment, install the dependencies, and
+register it as a Jupyter kernel:
+
+```bash
+conda create --name semedo python=3.10 -y
+conda activate semedo
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### Option 2: Docker
+
+The Docker image uses NVIDIA's PyTorch 23.10 base image and is intended for a
+Linux host with an NVIDIA GPU, a recent NVIDIA driver, and the NVIDIA Container
+Toolkit. 
+
+Build the Docker container with your project name:
+```bash
+docker build -t <YOUR PROJECT NAME>:0.1 .
+```
+
+Run the Docker container with your project name:
+```bash
+docker run -p <YOUR LOCAL PORT>:22 --rm --gpus all <YOUR PROJECT NAME>:0.1
+```
+
 ## Environment
 
 This repository is built on a GPU-optimized Python/PyTorch blueprint. The
