@@ -1,4 +1,21 @@
+# Supported runtime: Python 3.10
+
+# Shared scientific/image stack
+numpy>=1.24,<2
+pandas>=2.0,<3
+Pillow>=10,<11
 opencv-contrib-python==4.8.0.74
 opencv-python==4.8.0.74
-numpy==1.24
-wandb
+matplotlib>=3.7,<4
+
+# Annotation notebook
+jupyterlab>=4,<5
+ipython>=8,<9
+ipykernel>=6,<7
+ipywidgets>=8,<9
+ipympl>=0.9,<1
+
+# Fine-tuning and evaluation
+torch>=2.1,<2.2
+torchvision>=0.16,<0.17
+wandb>=0.16,<1
