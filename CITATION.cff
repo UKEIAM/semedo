@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "SeMeDo"
+type: software
+authors:
+  - family-names: Düsterbeck
+    given-names: "Lilly Marie"
+    affiliation: "University Medical Center Hamburg-Eppendorf"
+repository-code: "https://github.com/UKEIAM/semedo"
+license: MIT
