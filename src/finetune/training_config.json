@@ -6,11 +6,11 @@
   "root_folder": "../../data/external/smartdoc15",
   "opensource_metadata_path": "../../data/external/smartdoc15/frames_metadata.csv",
   "opensource_image_folder_path": "../../data/external/smartdoc15",
-  "include_uke_in_training": true,
+  "include_uke_in_training": false,
   "balance_train_domains": false,
   "allow_duplicate_samples_per_epoch": false,
   "training_scenario": "fixed_ratio_counts",
-  "selected_ratio_name": "ratio_50_50",
+  "selected_ratio_name": "opensource_only",
   "run_all_ratio_scenarios": false,
   "wandb_project": "u2net_test",
   "wandb_entity": null,
@@ -57,6 +57,15 @@
       "uke_ratio": 0.2,
       "opensource_ratio": 0.8,
       "match_uke_counts": true,
+      "include_opensource_in_train": true,
+      "include_opensource_in_val": true
+    },
+    {
+      "name": "opensource_only",
+      "uke_ratio": 0.0,
+      "opensource_ratio": 1.0,
+      "opensource_train_orig": 75,
+      "opensource_val_orig": 20,
       "include_opensource_in_train": true,
       "include_opensource_in_val": true
     }

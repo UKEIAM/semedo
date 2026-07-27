@@ -427,6 +427,15 @@ def build_uke_pool_and_test_holdout(training_config):
     )
     uke_data_dirs = [uke_train_dir, uke_val_dir, uke_test_dir]
 
+    if not os.path.isfile(uke_metadata_path):
+        raise FileNotFoundError(
+            f"include_uke_in_training is true but uke_metadata_path='{uke_metadata_path}' "
+            "does not exist. Either point uke_metadata_path/uke_train_dir/uke_val_dir/"
+            "uke_test_dir in training_config.json at your own institutional data (see the "
+            "annotation tool to create it), or set include_uke_in_training to false to train "
+            "on SmartDoc15 alone."
+        )
+
     df_uke_raw = pd.read_csv(uke_metadata_path)
     uke_available_paths = collect_images_from_folders(uke_data_dirs)
     df_uke = normalize_uke_metadata_paths(
@@ -619,6 +628,7 @@ def main():
             "ratio_50_50": 5,
             "ratio_50_50_val_uke_only": 6,
             "uke_only_train_val_uke": 4,
+            "opensource_only": 5,
         },
     )
 
