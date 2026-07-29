@@ -1,4 +1,3 @@
-<img src="img/rptk_logo.png" align="right" width="150"/>
 
 [![Logo Tool](https://img.shields.io/badge/Python-3.10-blue?)](https://github.com/username/mytool)
 [![Logo Tool](https://img.shields.io/badge/Operating_Systems-Linux-re?)](https://github.com/username/mytool)
