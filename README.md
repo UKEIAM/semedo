@@ -2,8 +2,6 @@
 [![Logo Tool](https://img.shields.io/badge/Python-3.10-blue?)](https://github.com/username/mytool)
 [![Logo Tool](https://img.shields.io/badge/Operating_Systems-Linux-re?)](https://github.com/username/mytool)
 
-<br />
-<br />
 
 # <img src="assets/logo.png" alt="SeMeDo" width="70" valign="middle"/> SeMeDo
 
