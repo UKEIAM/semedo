@@ -292,6 +292,12 @@ def get_points_from_df(img_path):
         return []
 
 
+def display_image_name(img_path) -> str:
+    """Shortens dummy-UKE filenames (pat_<n>__<tag>__<stem>) to just the trailing stem for display."""
+    name = Path(img_path).name
+    return name.rsplit("__", 1)[-1]
+
+
 def show_image(index):
     """Displays the current image and loads existing points from the CSV."""
     global points, scatter_points
@@ -306,7 +312,7 @@ def show_image(index):
     model_width, model_height = img_pil.size
     img = np.array(img_pil)
     ax.imshow(img)
-    ax.set_title(f"{img_path.name} - min {min_points}, max {max_points} points")
+    ax.set_title(f"{display_image_name(img_path)} - min {min_points}, max {max_points} points")
 
     existing_points = get_points_from_df(img_path)
     if existing_points:
@@ -335,7 +341,7 @@ def redraw_current_image(with_mask=True):
 
     ax.clear()
     ax.imshow(img)
-    ax.set_title(f"{img_path.name} - min {min_points}, max {max_points} points")
+    ax.set_title(f"{display_image_name(img_path)} - min {min_points}, max {max_points} points")
 
     if with_mask and len(points) >= 3:
         mask = polygon_to_mask(points, model_height, model_width)
