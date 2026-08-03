@@ -48,10 +48,6 @@ def plot_violin(df, output_dir, metric=METRIC):
     vp["cmins"].set_colors(colors)
     vp["cmaxes"].set_colors(colors)
 
-    for i, vals in enumerate(data):
-        x = np.random.normal(i + 1, 0.04, size=len(vals))
-        ax.scatter(x, vals, s=14, alpha=0.5, color=colors[i], edgecolors="black", linewidths=0.3)
-
     ax.set_xticks(np.arange(1, len(order) + 1))
     ax.set_xticklabels(labels, rotation=20, ha="right")
     ax.set_ylabel(metric.replace("_", " ").title())
@@ -64,7 +60,6 @@ def plot_violin(df, output_dir, metric=METRIC):
     plt.savefig(pdf_path, bbox_inches="tight")
     print(f"Saved {png_path}")
     print(f"Saved {pdf_path}")
-    plt.close(fig)
 
 
 def main():
