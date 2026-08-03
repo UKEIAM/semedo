@@ -76,6 +76,8 @@ The annotation notebook is config-driven.
 4. Set `min_points`/`max_points` (default `4`/`50`) to control how many polygon corners an annotation may have — the tool blocks saving below `min_points` and stops accepting new points at `max_points`.
 5. Open [src/annotate/annotation.ipynb](src/annotate/annotation.ipynb) and run the first cell
 
+New to the tool and don't have images yet? [download_assets.py](src/finetune/download_assets.py) (fetches SmartDoc15) and [create_dummy_uke_dataset.py](src/finetune/create_dummy_uke_dataset.py) (copies a sample of it into `data/uke/train`/`val`/`test` with pre-filled ground truth) exist for exactly this — both are already wired up as cells, `download_assets.py` in [finetuning.ipynb](src/finetune/finetuning.ipynb) (see [Training pipeline](#training-pipeline) below) and `create_dummy_uke_dataset.py` in [annotation.ipynb](src/annotate/annotation.ipynb), so just run those notebook cells rather than calling the scripts again separately from the command line. Note this is only for trying out the annotation tool and the `include_uke_in_training: true` code path end to end — it relabels SmartDoc15 images as fake "UKE" data, so it isn't useful training signal on its own. Actual training doesn't need it: the default `opensource_only` scenario already trains on real SmartDoc15 data without any UKE-shaped folders.
+
 By default the config points at the institutional image folders under [data/uke](data/uke) (`train`/`val`/`test`) and writes the ground-truth CSV to `data/uke/train_uke_model_coordinates.csv` — the same paths `training_config.json` expects for `uke_train_dir`/`uke_val_dir`/`uke_test_dir`/`uke_metadata_path`, so you can annotate and then fine-tune without changing any paths. (`uke` throughout the code/config is just this project's internal shorthand for "institutional data" — swap in your own institution's images/annotations under those same paths and keys.)
 
 ## Training pipeline
@@ -98,7 +100,9 @@ Training uses [src/finetune/training_config.json](src/finetune/training_config.j
    ```
    or open [src/finetune/finetuning.ipynb](src/finetune/finetuning.ipynb), run the config/download/validation cells, then set `RUN_TRAINING = True` in the last cell.
 
-If you also have your own annotated (institutional-style) data, point `uke_metadata_path`/`uke_train_dir`/`uke_val_dir`/`uke_test_dir` at it and keep `include_uke_in_training: true`; otherwise set that flag to `false` to train on SmartDoc15 alone.
+`include_uke_in_training` defaults to `false`, with `selected_ratio_name` set to the `opensource_only` scenario, so a fresh clone trains on a fixed sample of SmartDoc15 (`opensource_train_orig`/`opensource_val_orig` images) out of the box.
+
+If you also have your own annotated (institutional-style) data, point `uke_metadata_path`/`uke_train_dir`/`uke_val_dir`/`uke_test_dir` at it, set `include_uke_in_training` to `true`, and switch `selected_ratio_name` to one of the `ratio_XX_XX` scenarios — these use `match_uke_counts` to scale the SmartDoc15 sample to match however many institutional images you have. (`match_uke_counts` scales relative to your UKE image count, so it only makes sense once `include_uke_in_training` is `true` — with it `false`, that count is 0 and the scenario ends up with nothing to train on, which is exactly why the default scenario is `opensource_only` instead.)
 
 ## Evaluation
 
@@ -153,4 +157,4 @@ are not redistributed as part of this repository.
 
 ## License
 
-This project's own code is licensed under the terms in [LICENSE](LICENSE).
+This project's own code is licensed under the [MIT License](LICENSE).
