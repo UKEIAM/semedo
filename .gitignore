@@ -1,4 +1,12 @@
 
+# Project-specific
+/data/
+/models/
+/outputs/
+wandb/
+/Dockerfile
+/.devcontainer/
+
 # Created by https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python,jupyternotebooks,pycharm+all,visualstudiocode,pydev,pythonvanilla
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,linux,macos,python,jupyternotebooks,pycharm+all,visualstudiocode,pydev,pythonvanilla
 
