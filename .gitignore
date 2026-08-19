@@ -4,7 +4,6 @@
 /models/
 /outputs/
 wandb/
-src/finetune/create_dummy_uke_dataset.py
 /Dockerfile
 /.devcontainer/
 
